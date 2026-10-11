@@ -408,9 +408,7 @@ button.destructive {
 
 <main>
     <header>
-        <h1>手書き文字切り出し</h1>
-        <p>Canvasに文字を書き、範囲指定モードで1文字ずつ囲みます。「切り出す」で独立した画像として下に一覧表示します。</p>
-    </header>
+        <h1>カードに文字を書いてみよう！</h1>
 
     <section class="stage">
         <div class="canvas-shell" aria-label="手書き入力キャンバス">
@@ -422,7 +420,7 @@ button.destructive {
             <button id="pen" class="active">✏️ ペン</button>
             <button id="eraser">🧽 消しゴム</button>
             <button id="select">⬚ 範囲指定・切り出し</button>
-            <button id="apply">確定</button>
+            <button id="apply">カードを保存</button>
             <button id="clear" class="destructive">消去</button>
         </div>
 
@@ -430,7 +428,7 @@ button.destructive {
     </section>
 
     <section class="gallery">
-        <h2>保存したキャンバス</h2>
+        <h2>保存したカード</h2>
         <div id="snapshotList" class="snapshot-list">
             <div id="snapshotEmpty" class="empty">まだ保存されていません。</div>
         </div>
@@ -525,10 +523,10 @@ function renderSnapshotList() {
 
         var title = document.createElement("div");
         title.className = "snapshot-title";
+        title.textContent = "カード " + (index + 1);
 
         var info = document.createElement("div");
         info.className = "snapshot-info";
-        info.textContent = snapshot.width + "×" + snapshot.height + "px";
 
         meta.appendChild(title);
         meta.appendChild(info);
@@ -538,7 +536,7 @@ function renderSnapshotList() {
 
         var img = document.createElement("img");
         img.src = snapshot.dataUrl;
-        img.alt = "保存したキャンバス " + (index + 1);
+        img.alt = "保存したカード " + (index + 1);
 
         preview.appendChild(img);
 
@@ -1041,6 +1039,27 @@ function renderCurrentCanvasSnapshot() {
     };
 }
 
+function resetWorkingCanvas() {
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    layers = [];
+    selectedLayerIndex = -1;
+    activeTransform = null;
+    mode = "draw";
+    drawing = false;
+    selecting = false;
+    currentSelection = null;
+    selectionStart = null;
+    clearOverlay();
+    ensureOverlayPointerEvents();
+    setTool("pen");
+}
+
 penButton.addEventListener("click", function () {
     setTool("pen");
 });
@@ -1065,31 +1084,12 @@ applyButton.addEventListener("click", function () {
     var snapshot = renderCurrentCanvasSnapshot();
     snapshots.unshift(snapshot);
     renderSnapshotList();
-    flattenLayers();
-    setStatus("現在のキャンバスを保存しました。");
+    resetWorkingCanvas();
+    setStatus("現在のキャンバスを保存して、新しいキャンバスを開始しました。");
 });
 
 clearButton.addEventListener("click", function () {
-    ctx.save();
-    ctx.globalCompositeOperation = "source-over";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-
-    layers = [];
-    selectedLayerIndex = -1;
-    activeTransform = null;
-    snapshots = [];
-    mode = "draw";
-    drawing = false;
-    selecting = false;
-    currentSelection = null;
-    selectionStart = null;
-    clearOverlay();
-    ensureOverlayPointerEvents();
-    setTool("pen");
-    renderSnapshotList();
+    resetWorkingCanvas();
     setStatus("Canvasを消去しました。");
 });
 
